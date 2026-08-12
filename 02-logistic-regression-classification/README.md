@@ -1,187 +1,309 @@
 # 02 — Logistic Regression / Classification
 
+> **New to this?** Read sections 1–3 slowly. They assume only project 01 (a linear
+> model, a loss, and gradient descent). Every formula is written in words first, then
+> in symbols, then shown as the exact line of code that implements it.
+
 ## 1. What you'll build
 
-A binary classifier implemented with nothing but numpy — same gradient-descent
-skeleton as project 01, but for predicting a *category* instead of a number. You'll
-derive why the model needs a squashing function (sigmoid) and a different loss
-function (cross-entropy) than linear regression used, prove the resulting gradient
-has a surprisingly familiar shape, and then run an experiment that makes the "why not
-just reuse MSE" question concrete instead of theoretical: you'll watch a model trained
-with MSE get permanently stuck, and one trained with cross-entropy escape the same bad
-starting point.
+A binary classifier in pure numpy, using the **same gradient-descent skeleton as
+project 01** — but for predicting a *category* instead of a number. Two things have to
+change, and you'll derive both rather than being handed them.
+
+| Part | What it shows | The evidence |
+|---|---|---|
+| 1 | A linear model of *log-odds* gives a straight decision boundary | 98.3% accuracy, and the boundary plotted as a literal straight line |
+| 2 | Your from-scratch math is correct | Scratch 96.5% vs. scikit-learn 98.2% on real cancer data |
+| 3 | MSE is not merely suboptimal here — it **breaks** | Same start, same data: cross-entropy 24.0 → 0.04, MSE 0.987 → 0.987 |
+
+Part 3 is the heart of this project. "Use cross-entropy for classification" is
+something you can read anywhere; here you'll watch an MSE-trained model sit completely
+frozen for 300 iterations while an otherwise identical model converges, and you'll have
+derived beforehand exactly why it happens.
 
 ## 2. The core idea
 
-Linear regression predicts an unbounded number. That's wrong for "is this tumor
-malignant?" — the answer is 0 or 1, and anything a model outputs in between should be
-read as a *probability*, not a raw score. Two things need to change from project 01:
+Linear regression outputs an unbounded number. That's wrong for "is this tumor
+malignant?", where the answer is 0 or 1 and anything in between should mean a
+*probability*. Feeding house-price machinery this task fails in two distinct ways:
 
-1. **Squash the linear score into a probability** — a function that takes any real
-   number and maps it to `(0, 1)`.
-2. **Score "how good is this probability estimate" differently** — squared error
-   treats being 40% confident and being 90% confident as a smooth, symmetric penalty;
-   what we actually want is a loss that punishes *confident, wrong* predictions much
-   more than MSE does, since a probability estimate that's confidently wrong is a much
-   worse mistake than a hedged one.
+1. **The output range is wrong.** $Xw + b$ happily returns $-4.7$ or $12.3$. There is
+   no sensible reading of "this tumor is −4.7 malignant." We need to squash the number
+   into $(0, 1)$. → §3.1
+2. **The scoring is wrong.** Squared error treats a probability estimate like a
+   measurement, penalizing symmetrically and gently. But being *confidently wrong*
+   about a probability is a far worse failure than hedging, and we want a loss that
+   says so. → §3.2
+
+Fix (1) and you get the sigmoid. Fix (2) and you get cross-entropy. Fix both and the
+gradient turns out to be almost exactly project 01's.
 
 ## 3. The math
 
-### The model and the sigmoid
+### 3.1 The sigmoid, and where it comes from
 
-```
-z     = X @ w + b                          (the same linear score as before)
-y_hat = sigmoid(z) = 1 / (1 + e^(-z))
-```
+The model computes the same linear score as before, then squashes it:
 
-Why *this* function, specifically? Two properties, and they're really the same
-property stated two ways:
+$$z = Xw + b \qquad\qquad \hat{y} = \sigma(z) = \frac{1}{1 + e^{-z}}$$
 
-- Its range is exactly `(0, 1)` for any real input — a valid probability, no matter
-  how extreme `z` gets.
-- It's the inverse of the **log-odds** (logit) function: if `p = sigmoid(z)`, then
-  `z = log(p / (1-p))`. So the linear model isn't predicting the probability directly —
-  it's predicting the log-odds of the positive class, and the sigmoid converts that
-  back to a probability. This is *why* the decision boundary ends up being a straight
-  line (or flat hyperplane) even though the probability surface itself is curved: the
-  boundary is where `p = 0.5`, which is exactly where `z = 0` — a linear condition on
-  `x`. You can see this directly in `outputs/decision_boundary.png` after running the
-  code: a straight line separates the two classes even though the underlying
-  probabilities curve smoothly from 0 to 1 around it.
+This function maps any real number into $(0,1)$: as $z \to +\infty$, $e^{-z} \to 0$ and
+$\sigma \to 1$; as $z \to -\infty$, $e^{-z} \to \infty$ and $\sigma \to 0$; at $z = 0$
+it's exactly $0.5$.
 
-### The loss: binary cross-entropy, derived from maximum likelihood
+But why *this* squashing function and not any other S-shaped curve? Because it's the
+inverse of the **log-odds**. The odds of an event with probability $p$ are
+$p/(1-p)$ — "3-to-1 on" — and their log is:
 
-Treat each label `y_i ∈ {0, 1}` as a draw from a Bernoulli distribution with success
-probability `y_hat_i`. The probability of the data we actually observed, for one
-point, is:
+$$z = \log\frac{p}{1 - p}$$
 
-```
-P(y_i | x_i) = y_hat_i^(y_i) * (1 - y_hat_i)^(1 - y_i)
-```
+Solve that for $p$ and you get $p = 1/(1+e^{-z})$: the sigmoid, exactly. So the honest
+description of this model is **not** "linear regression with a squasher bolted on". It
+is:
 
-(Check it: if `y_i=1` this is `y_hat_i`; if `y_i=0` this is `1 - y_hat_i` — exactly
-the probability the model assigned to whichever outcome actually happened.)
+> The **log-odds** of the positive class are a linear function of the features.
 
-The likelihood of the *whole* dataset is the product over all points (assuming
-independence). Products of many small numbers underflow and are hard to differentiate,
-so take the log instead — maximizing the log-likelihood is equivalent to maximizing
-the likelihood, since log is monotonic:
+That reframing immediately explains something you can see in the plot below. The
+decision boundary — where the model switches its answer — is where $p = 0.5$. And
+$p = 0.5$ means odds of 1, so $\log(1) = 0$, so the boundary is exactly where:
 
-```
-log L(w,b) = Σ [ y_i * log(y_hat_i) + (1 - y_i) * log(1 - y_hat_i) ]
-```
+$$z = w_1x_1 + w_2x_2 + b = 0$$
 
-"Best" weights maximize this. Optimizers conventionally *minimize*, so negate and
-average over `n` — that negative average log-likelihood is exactly the binary
-cross-entropy loss:
+which is the equation of a **straight line** (a flat hyperplane in higher dimensions).
+The probability surface curves smoothly from 0 to 1, but the boundary through it is
+perfectly straight — and that's a consequence of the log-odds being linear, not an
+approximation.
 
-```
-J(w, b) = -(1/n) * Σ [ y*log(y_hat) + (1-y)*log(1-y_hat) ]
-```
+### 3.2 Cross-entropy, derived from maximum likelihood
 
-This isn't an arbitrary choice the way it might look — it's *the* loss implied by
-"assume the labels are Bernoulli draws and find the weights that make the observed
-data most probable." (Project 01's MSE has the same kind of justification: it's the
-maximum-likelihood loss if you assume the errors are Gaussian — worth noticing that
-"pick a loss" is usually really "pick an assumption about the noise.")
+We need a loss for probability estimates. Rather than inventing one, ask a precise
+question: **which weights make the data we actually observed most probable?**
 
-### The gradient — and why it looks exactly like project 01's
+Treat each label $y_i \in \{0,1\}$ as a coin flip (a Bernoulli trial) whose probability
+of coming up 1 is $\hat{y}_i$. The probability of observing the label we actually saw is:
 
-Differentiate `J` with respect to `z` (not `w` yet) using the chain rule through
-`y_hat = sigmoid(z)`. Two facts you need first:
+$$P(y_i \mid x_i) = \hat{y}_i^{\,y_i}\,(1 - \hat{y}_i)^{\,1 - y_i}$$
 
-```
-d(log y_hat)/dy_hat = 1/y_hat
-sigmoid'(z) = sigmoid(z) * (1 - sigmoid(z)) = y_hat * (1 - y_hat)
-```
+That looks fiddly but it's just a switch, because anything raised to the power 0 is 1.
+If $y_i = 1$ the exponents are $1$ and $0$, so the expression collapses to $\hat{y}_i$.
+If $y_i = 0$ they are $0$ and $1$, collapsing to $1 - \hat{y}_i$. Either way it returns
+the probability the model assigned to whatever actually happened.
 
-(That second one is a nice fact about the sigmoid worth deriving once on paper — it's
-one of the few common activation functions whose derivative is this cheap to compute
-from its own output, which is part of why it was historically popular.)
+Assuming examples are independent, the probability of the **whole dataset** is the
+product:
 
-Now chain through `J -> y_hat -> z`:
+$$L(w,b) = \prod_{i=1}^{n}\hat{y}_i^{\,y_i}(1-\hat{y}_i)^{1-y_i}$$
 
-```
-dJ/dy_hat = -(1/n) * [ y/y_hat - (1-y)/(1-y_hat) ]
+Products of thousands of numbers below 1 underflow to zero and are painful to
+differentiate, so take the log — which is safe, because $\log$ is monotonic, so
+whatever maximizes $L$ also maximizes $\log L$. Logs turn products into sums:
 
-dJ/dz = dJ/dy_hat * dy_hat/dz
-      = -(1/n) * [ y/y_hat - (1-y)/(1-y_hat) ] * y_hat*(1-y_hat)
-      = -(1/n) * [ y*(1-y_hat) - (1-y)*y_hat ]              <- multiply through
-      = -(1/n) * [ y - y*y_hat - y_hat + y*y_hat ]           <- expand
-      = -(1/n) * [ y - y_hat ]
-      = (1/n) * (y_hat - y)
-```
+$$\log L(w,b) = \sum_{i=1}^{n}\Big[y_i\log\hat{y}_i + (1-y_i)\log(1-\hat{y}_i)\Big]$$
 
-The `y_hat*(1-y_hat)` sigmoid-derivative term **cancels exactly** against the
-`1/y_hat` and `1/(1-y_hat)` terms from the cross-entropy derivative. That cancellation
-is the whole point — it's not a coincidence, and it doesn't happen for other
-loss/activation pairings (see Part 3 below, where using MSE instead breaks the
-cancellation and the leftover `y_hat*(1-y_hat)` term causes real problems).
+We want to *maximize* this, but optimizers minimize by convention. So negate it, and
+average over $n$ to keep the scale independent of dataset size:
 
-Stacked across features, the gradients are:
+$$\boxed{\ J(w,b) = -\frac{1}{n}\sum_{i=1}^{n}\Big[y_i\log\hat{y}_i + (1-y_i)\log(1-\hat{y}_i)\Big]\ }$$
 
-```
-dJ/dw = (1/n) * X^T @ (y_hat - y)
-dJ/db = (1/n) * Σ (y_hat - y)
-```
+That is **binary cross-entropy**, and notice we didn't choose it — it fell out of
+"assume Bernoulli labels and maximize likelihood." Project 01's MSE has the same
+pedigree: it's the maximum-likelihood loss when you assume *Gaussian* noise. Picking a
+loss is really picking an assumption about how your data was generated.
 
-**Compare to project 01's**: `dJ/dw = (2/n) * X^T @ (y_hat - y)` for linear
-regression. Same `(y_hat - y)` error term, same `X^T @ (...)` structure — only the
-constant differs (project 01's 2 comes from differentiating a square; here there's no
-square). This isn't a coincidence either: linear regression (Gaussian noise + identity
-link) and logistic regression (Bernoulli noise + logit link) are both members of the
-same family of models (generalized linear models), and "gradient = error × input"
-is the general pattern for that whole family.
+**Why it punishes confident wrongness so hard:** the loss for a single positive example
+is $-\log\hat{y}$. Predict 0.9 and pay $0.105$. Predict 0.1 and pay $2.303$. Predict
+0.001 and pay $6.908$. As $\hat{y} \to 0$ the penalty goes to **infinity**. Squared
+error, by contrast, can never charge more than 1.
+
+### 3.3 The gradient — and a cancellation that matters
+
+Now differentiate. Two facts first:
+
+$$\frac{d}{d\hat{y}}\log\hat{y} = \frac{1}{\hat{y}} \qquad\qquad \sigma'(z) = \sigma(z)\big(1 - \sigma(z)\big) = \hat{y}(1-\hat{y})$$
+
+(That second one is a genuinely nice property of the sigmoid — its derivative is
+computable from its own output, no extra work. Worth deriving once on paper.)
+
+Chain the derivative through $J \to \hat{y} \to z$:
+
+$$\frac{\partial J}{\partial \hat{y}} = -\frac{1}{n}\left[\frac{y}{\hat{y}} - \frac{1-y}{1-\hat{y}}\right]$$
+
+$$
+\frac{\partial J}{\partial z} = \frac{\partial J}{\partial \hat{y}}\cdot\frac{\partial \hat{y}}{\partial z}
+= -\frac{1}{n}\left[\frac{y}{\hat{y}} - \frac{1-y}{1-\hat{y}}\right]\hat{y}(1-\hat{y})
+$$
+
+Multiply the bracket through by $\hat{y}(1-\hat{y})$ — the $\hat{y}$ cancels in the first
+term and the $(1-\hat{y})$ cancels in the second:
+
+$$= -\frac{1}{n}\Big[y(1-\hat{y}) - (1-y)\hat{y}\Big] = -\frac{1}{n}\Big[y - y\hat{y} - \hat{y} + y\hat{y}\Big] = -\frac{1}{n}(y - \hat{y})$$
+
+$$\boxed{\ \frac{\partial J}{\partial z} = \frac{1}{n}(\hat{y} - y)\ }$$
+
+**The $\hat{y}(1-\hat{y})$ term vanished completely.** Cross-entropy's derivative
+produced exactly the reciprocals needed to cancel the sigmoid's derivative. That
+cancellation is the entire reason this pairing is used — and §3.4 shows what happens
+when you break it.
+
+Stacked across features:
+
+$$\frac{\partial J}{\partial w} = \frac{1}{n}X^{T}(\hat{y} - y) \qquad\qquad \frac{\partial J}{\partial b} = \frac{1}{n}\sum_i(\hat{y}_i - y_i)$$
+
+**Compare with project 01**, whose gradient was $\frac{2}{n}X^T(\hat{y}-y)$. Same error
+term, same $X^T(\cdot)$ structure — only a constant differs (project 01's 2 came from
+differentiating a square; there's no square here). Different task, different output
+function, different loss, *same shape of gradient*. That's because both are
+**generalized linear models**, and "gradient = error × input" is the general pattern
+for that whole family. You'll meet it again in backpropagation.
+
+### 3.4 Why MSE fails — the prediction Part 3 tests
+
+Suppose we ignore all of the above and just use squared error on the sigmoid's output,
+$J = \frac{1}{n}\sum(\hat{y}-y)^2$. Now the chain rule gives:
+
+$$\frac{\partial J}{\partial z} = \underbrace{(\hat{y} - y)}_{\text{how wrong}} \cdot \underbrace{\hat{y}(1 - \hat{y})}_{\text{sigmoid derivative — survives!}}$$
+
+With no cross-entropy logs to cancel it, that second factor stays. And look at what it
+does. When the model is **confidently wrong** — say $\hat{y} = 0.001$ when $y = 1$:
+
+$$\hat{y}(1-\hat{y}) = 0.001 \times 0.999 \approx 0.001$$
+
+The gradient gets multiplied by ~0.001. **The update becomes almost zero at precisely
+the moment the model most needs a large correction.** The sigmoid is saturated — flat —
+so its derivative is nearly zero, and MSE's gradient inherits that flatness.
+
+Cross-entropy's gradient, $\hat{y} - y$, has no such factor. Confidently wrong gives
+$0.001 - 1 = -0.999$: a full-strength correction.
+
+This is called the **vanishing gradient** problem, and it's not a curiosity — it's a
+central obstacle in deep learning (projects 06 and 09). The prediction to test: *start
+both models from a confidently-wrong position and the MSE model should be unable to
+escape.* Part 3 runs exactly that experiment.
 
 ## 4. From formula to code
 
-Open [`logistic_regression.py`](logistic_regression.py) — the `LogisticRegressionGD`
-class docstring numbers each formula, and the matching line in `fit()` carries the
-same number.
+Open [`logistic_regression.py`](logistic_regression.py). The `LogisticRegressionGD`
+docstring numbers each formula, and the matching line in `fit()` carries the number.
 
-| Formula | Code |
-|---|---|
-| `z = X @ w + b` | `z = X @ self.weights + self.bias` |
-| `y_hat = sigmoid(z)` | `y_hat = self._sigmoid(z)` |
-| `J = -(1/n)Σ[y·log(y_hat) + (1-y)·log(1-y_hat)]` | the `loss = -np.mean(...)` line |
-| `dJ/dz = y_hat - y` | `dz = y_hat - y` |
-| `dJ/dw = (1/n) X^T(y_hat-y)` | `dw = (1/n) * (X.T @ dz)` |
-| `w := w - α·dJ/dw` | `self.weights -= self.learning_rate * dw` |
+| # | Formula | Code |
+|---|---|---|
+| (1) | $z = Xw + b$ | `z = X @ self.weights + self.bias` |
+| (2) | $\hat{y} = \sigma(z)$ | `y_hat = self._sigmoid(z)` |
+| (3) | $J = -\frac{1}{n}\sum[y\log\hat{y} + (1-y)\log(1-\hat{y})]$ | the `loss = -np.mean(...)` line |
+| (4) | $\partial J/\partial z = \hat{y} - y$ | `dz = y_hat - y` |
+| (5) | $\partial J/\partial w = \frac{1}{n}X^T(\hat{y}-y)$ | `dw = (1 / n_samples) * (X.T @ dz)` |
+| (6) | $w := w - \alpha\,\partial J/\partial w$ | `self.weights -= self.learning_rate * dw` |
+| §3.4 | MSE's extra $\hat{y}(1-\hat{y})$ | `dz = error * y_hat * (1 - y_hat)` |
 
-`predict_proba` returns `y_hat` directly (the actual probability estimate — useful
-when you care about confidence, not just the label); `predict` thresholds it at 0.5
-by default to get a hard 0/1 label.
+Two implementation details that exist for numerical reasons, not mathematical ones:
+
+- `np.clip(z, -500, 500)` in `_sigmoid` — $e^{-z}$ overflows to `inf` for very negative
+  $z$. Clipping changes nothing meaningful (the sigmoid is already 0 or 1 to machine
+  precision out there) and avoids warnings.
+- `np.clip(y_hat, 1e-12, 1 - 1e-12)` before the log — $\log(0)$ is $-\infty$. Since a
+  perfectly confident correct prediction should cost ~0 and a perfectly confident wrong
+  one should cost a lot (but finite), nudging away from the exact endpoints keeps the
+  loss a real number.
+
+`predict_proba` returns $\hat{y}$ itself — the probability, which is what you want when
+confidence matters. `predict` thresholds it at 0.5 to give a hard label. **That
+threshold is a choice, not a property of the model** — exercise 2, and the main subject
+of project 03.
 
 ## 5. The data
 
-Three datasets/scenarios, each isolating a different idea:
+Three scenarios, each isolating one idea:
 
-1. **Synthetic 2D blobs** (`run_synthetic_demo`, Part 1): two well-separated Gaussian
-   clusters. Because it's 2D, you can actually plot the learned decision boundary on
-   top of the data and see the "linear boundary from a linear log-odds model" claim
-   directly, not just algebraically.
-2. **Breast cancer diagnosis** (`run_breast_cancer_demo`, Part 2): a real, built-in
-   scikit-learn dataset — 30 features derived from cell measurements, predicting
-   malignant vs. benign. Real features, real scale problems (another reason to
-   standardize), and a real place where precision/recall tradeoffs actually matter
-   (missing a malignant tumor and misclassifying a benign one are not equally bad —
-   project 03 goes deep on this).
-3. **The same 2D blobs, but from a bad starting point** (`run_loss_comparison_demo`,
-   Part 3): both models start from identical, deliberately wrong initial weights
-   (pointing away from the true separating direction) instead of the usual zero-init,
-   to expose the difference between cross-entropy's and MSE's gradients when the model
-   is confidently wrong — see below.
+1. **Synthetic 2D blobs** (`run_synthetic_demo`) — two Gaussian clusters. Two
+   dimensions specifically so the decision boundary can be *drawn*, letting you see
+   the "linear boundary from linear log-odds" claim rather than only deriving it.
+2. **Breast cancer diagnosis** (`run_breast_cancer_demo`) — a real scikit-learn
+   dataset: 30 features from cell-nucleus measurements, predicting malignant vs.
+   benign. Real features, real scale differences (hence standardization), and a real
+   asymmetry between error types — missing a malignant tumour is not equivalent to a
+   false alarm.
+3. **The same blobs from a sabotaged starting point** (`run_loss_comparison_demo`) —
+   both models start at identical, deliberately wrong weights pointing away from the
+   correct direction, instead of the usual zero-init. Zero-init starts every prediction
+   at $p = 0.5$, where the sigmoid is *steepest* and MSE's gradient is healthiest — so
+   it would hide the effect. The bad init puts both models deep in saturation, which is
+   where the two losses part company.
 
-## 6. Build it
+## 6. Results — what each plot is telling you
 
-Everything's in [`logistic_regression.py`](logistic_regression.py):
-- `LogisticRegressionGD` — from-scratch model; `loss="bce"` (default, correct) or
-  `loss="mse"` (wrong on purpose, for Part 3's comparison).
-- `run_synthetic_demo()` — 2D fit, loss curve, decision boundary plot.
-- `run_breast_cancer_demo()` — scratch vs. scikit-learn on real data.
-- `run_loss_comparison_demo()` — the bad-init BCE-vs-MSE experiment.
+### Part 1 — the boundary is a straight line
 
-## 7. Train & evaluate
+![Decision boundary separating two Gaussian clusters](outputs/decision_boundary.png)
+
+```
+Learned: w=[1.623 1.706], b=0.361
+Test accuracy: 0.983
+```
+
+The black line is where the model puts $p = 0.5$. It is *exactly* straight — that's
+§3.1's claim made visible. The underlying probability surface is a smooth S-shaped
+ramp from 0 to 1, yet the set of points where it crosses 0.5 is perfectly flat, because
+that set is the solution of the linear equation $z = 0$.
+
+You can read the weights off the picture too: $w = [1.623, 1.706]$ are nearly equal, so
+the boundary sits at roughly 45°, meaning both features contribute about equally to
+the decision. This is also linear models' great virtue — the parameters are
+interpretable in a way a neural network's are not.
+
+### Part 1 — the loss curve
+
+![Binary cross-entropy decreasing over iterations](outputs/loss_curve.png)
+
+Same shape as project 01's: steep descent, then flattening as the gradient shrinks
+toward zero. The y-axis is now cross-entropy rather than MSE, but the mechanics of
+gradient descent haven't changed at all — which is the point of reusing the skeleton.
+
+### Part 2 — scratch vs. the real library
+
+```
+Method                            Accuracy  Precision   Recall      F1
+----------------------------------------------------------------------
+Scratch (gradient descent)           0.965      0.986    0.958   0.972
+scikit-learn LogisticRegression      0.982      0.986    0.986   0.986
+```
+
+Close, but not identical — and the difference is *expected*, not a bug. scikit-learn
+defaults to the L-BFGS solver (a second-order method using curvature, not plain
+gradient descent) and applies **L2 regularization by default**, which our scratch model
+has none of. Exercise 3 adds it and closes most of the gap.
+
+The four metrics are previewed here and explained properly in project 03. For now:
+recall 0.958 means the scratch model caught 95.8% of the benign cases, and in a
+screening context you'd want to know which class you're measuring and which error is
+costlier — a theme project 03 develops at length.
+
+### Part 3 — the experiment: MSE frozen solid
+
+![Normalized loss curves: cross-entropy converging, MSE flat](outputs/bce_vs_mse_convergence.png)
+
+```
+Same bad starting point, same learning rate, same data, 300 iterations:
+  Cross-entropy loss: 24.032 -> 0.040
+  MSE loss:           0.987 -> 0.987
+```
+
+This is the payoff. Both curves are normalized to their own starting loss (the two
+losses live on different scales, but "fraction of initial loss remaining" is directly
+comparable), so both begin at 1.0.
+
+The blue curve collapses to near zero within ~50 iterations. **The orange line is
+flat** — not slow, not noisy: visually indistinguishable from horizontal across 300
+iterations. The MSE model has not learned anything at all.
+
+Nothing differs between these two runs except the loss function. Same initialization,
+same learning rate, same data, same update rule. And §3.4 predicted this before the
+code ran: starting deep in saturation, MSE's gradient carries a $\hat{y}(1-\hat{y})$
+factor of roughly $0.001$, so every update is a thousandth of the size it needs to be.
+The model is confidently wrong and structurally unable to notice.
+
+This is what "the wrong loss function" actually looks like — not slightly worse
+accuracy, but a model that cannot train.
+
+## 7. Run it
 
 ```bash
 cd 02-logistic-regression-classification
@@ -191,56 +313,42 @@ pip install -r requirements.txt
 python logistic_regression.py
 ```
 
-Expect:
-- **Part 1**: ~98% test accuracy on the synthetic blobs (they're well-separated, so
-  this should be easy), plus `outputs/decision_boundary.png` (a straight black line
-  splitting the two color clusters) and `outputs/loss_curve.png`.
-- **Part 2**: scratch and scikit-learn accuracy both land in the mid-to-high 90s on
-  breast cancer diagnosis, close but not identical (sklearn's default solver isn't
-  plain gradient descent, and it applies L2 regularization by default — see
-  exercise 3). Precision/recall/F1 are printed too; project 03 explains what to do
-  with them.
-- **Part 3 — the important one**: both models start at identical, deliberately bad
-  weights. The cross-entropy model's loss should collapse from ~24 to ~0.04 within
-  ~300 iterations. **The MSE model's loss should barely move at all** — it gets
-  stuck near its starting value. That's not a bug in the MSE branch; it's the
-  vanishing-gradient failure mode the math predicted: the `y_hat*(1-y_hat)` factor in
-  MSE's gradient is close to 0 exactly when the model is confidently wrong, so the
-  update step is tiny exactly when it needs to be large. `outputs/bce_vs_mse_convergence.png`
-  plots both, normalized to their own starting loss, on one axis.
+Expect ~98% on Part 1's blobs, mid-to-high 90s for both methods in Part 2, and in
+Part 3 a cross-entropy loss falling from ~24 to ~0.04 while MSE stays pinned near
+0.987. Writes three plots to `outputs/`.
 
 ## 8. Exercises
 
-1. **Find the tipping point.** In `run_loss_comparison_demo`, the bad init is
-   `w=[-8,-8], b=-2`. Try milder bad inits (e.g. `[-2,-2]`) — at what magnitude does
-   MSE stop getting stuck and start learning at a comparable rate to cross-entropy?
-   This tells you *how* confidently wrong a prediction needs to be before the vanishing
-   gradient actually bites — MSE isn't uniformly bad, it's bad specifically near
-   saturation.
-2. **Move the decision threshold.** In `run_breast_cancer_demo`, change
-   `scratch_model.predict(X_test_scaled)` to
-   `scratch_model.predict(X_test_scaled, threshold=0.3)`, then try `0.7`. Watch
-   precision and recall move in opposite directions. In a cancer-screening context,
-   argue on paper which threshold you'd actually want and why (hint: think about which
-   kind of mistake — false positive vs. false negative — is more costly here).
-3. **Add L2 regularization.** Add `+ alpha * self.weights` to `dw` inside `fit()` (the
-   gradient of adding `alpha * sum(w^2)` to the loss — same idea as project 01
-   exercise 4). Try `alpha=0.1` and `alpha=10.0` on the breast cancer data and watch
-   how close the scratch model's accuracy gets to sklearn's default (`LogisticRegression`
-   applies L2 regularization automatically, which is one reason your unregularized
-   scratch model and sklearn didn't match exactly in Part 2).
-4. **Break the boundary.** In `make_synthetic_2d`, move the two cluster centers closer
-   together (e.g. `[-1,-1]` and `[1,1]` instead of `[-2,-2]`/`[2,2]`) so the classes
-   overlap. Re-run Part 1 — accuracy should drop and the decision boundary plot should
-   show visibly misclassified points on the wrong side of the line. This is what
-   "irreducible error" looks like for classification: no linear boundary can perfectly
-   separate overlapping classes, the same way no line perfectly fit the noisy data in
-   project 01.
+1. **Find the tipping point.** Part 3's bad init is $w = [-8, -8]$, $b = -2$. Try
+   milder ones — $[-2,-2]$, then $[-4,-4]$. At what magnitude does MSE stop being stuck
+   and start learning at a comparable rate? This tells you *how* confidently wrong a
+   model must be before the vanishing gradient bites. MSE isn't uniformly bad; it's bad
+   specifically near saturation.
+2. **Move the threshold.** In `run_breast_cancer_demo`, change
+   `scratch_model.predict(X_test_scaled)` to use `threshold=0.3`, then `0.7`. Watch
+   precision and recall move in opposite directions while the *model itself never
+   changes*. Then argue on paper which threshold a cancer screening programme should
+   use, and why. (Project 03 shows a case where this choice improves F1 tenfold.)
+3. **Add L2 regularization.** Add `+ alpha * self.weights` to `dw` in `fit()` — the
+   gradient of adding $\alpha\sum_j w_j^2$ to the loss. Try `alpha=0.1` and `alpha=10.0`
+   on the cancer data and watch the scratch model move toward sklearn's numbers, since
+   sklearn regularizes by default.
+4. **Break the boundary.** In `make_synthetic_2d`, move the cluster centres from
+   $[-2,-2]$ and $[2,2]$ to $[-1,-1]$ and $[1,1]$ so the classes overlap. Accuracy
+   drops and the boundary plot shows points stranded on the wrong side. No straight
+   line can separate overlapping classes — this is what project 01's "irreducible
+   error" looks like for classification.
+5. **Verify the cancellation numerically.** Pick a single training point, compute
+   $\partial J/\partial z$ by hand from §3.3, then compare against a numerical
+   derivative: $\big(J(z + 10^{-6}) - J(z - 10^{-6})\big) / (2 \times 10^{-6})$. They
+   should agree to ~6 decimals. This is **gradient checking**, and it's the standard
+   way to catch a bad derivation before it silently trains a broken model.
 
 ## 9. What's next
 
-Both projects so far reported accuracy/MSE/R² almost as an afterthought. Project 03
-makes evaluation the main subject: train/validation/test splits and *why* a single
-split can lie to you, k-fold cross-validation, the bias-variance tradeoff, and a
-careful look at precision/recall/F1/ROC-AUC — including cases (like this project's
-exercise 2) where "highest accuracy" is the wrong thing to optimize for.
+Both projects so far have reported accuracy, MSE and R² almost in passing — and Part 2
+above quietly showed four metrics disagreeing about the same model without explaining
+which to trust. Project 03 makes evaluation the subject: why a single train/test split
+can lie to you, k-fold cross-validation, the bias-variance decomposition derived and
+verified numerically, precision/recall/F1/ROC-AUC in depth, and a demonstration of data
+leakage manufacturing 89% accuracy from pure random noise.

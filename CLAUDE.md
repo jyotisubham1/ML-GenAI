@@ -66,8 +66,8 @@ Project READMEs are written for a beginner: a short "read 1–3 slowly" note at 
 every formula stated in words before symbols, **LaTeX math** in `$…$` / `$$…$$` (GitHub
 renders it natively — do not fall back to plain-text formulas), the generated plots
 **embedded inline** with a paragraph explaining what each one shows, and a worked
-numeric example using the script's actual printed output. Projects 01 and 02 predate
-this and still use plain-text formula blocks; retrofit them if the user asks.
+numeric example using the script's actual printed output. Projects 01 and 02 were
+retrofitted to this style on 2026-08-12 — all three now match, so follow it from here.
 
 ## Repo
 
