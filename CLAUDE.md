@@ -67,8 +67,14 @@ build ahead. Answer questions about the current project freely.
   silhouette, the two structural failures of k-means, PCA derived via Lagrange
   multipliers, and PCA beating 500 random projections.
 
-**Phase 1 (classical ML) is complete.** Next is **06 — Neural Network from Scratch
-(numpy)**: forward pass, backprop derived via the chain rule.
+- **06 — Neural Network from Scratch** — done. Forward pass, backprop derived via the
+  chain rule and verified against numerical gradients to ~1e-9, XOR, the linear-collapse
+  proof, vanishing gradients measured across 12 layers, and initialization tested at two
+  depths. Reports honestly that logistic regression beats the network on digits.
+
+**Phase 1 (classical ML) is complete; Phase 2 has begun.** Next is **07 — Neural
+Network in PyTorch**: autograd checked against the scratch backprop, `nn.Module`,
+optimizers.
 
 ### README style (set at 03, extended at 04 — apply to ALL projects)
 
