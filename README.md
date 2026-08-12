@@ -23,7 +23,7 @@ earlier ones — go in order the first time through.
    else's working code teaches far less than breaking it and figuring out why it broke.
 4. Move to the next project.
 
-Projects are built one at a time, in order, as you work through them — **01–06** exist so far — **Phase 1 (classical ML)** is complete and Phase 2 has begun.
+Projects are built one at a time, in order, as you work through them — **01–07** exist so far — **Phase 1 (classical ML)** is complete and Phase 2 is underway.
 Say "next" (or ask questions about the current one) when you're ready and the next one
 gets built the same way: README + math + code + data + exercises.
 
@@ -42,7 +42,7 @@ gets built the same way: README + math + code + data + exercises.
 | # | Project | Core ideas |
 |---|---------|------------|
 | 06 | [Neural Network from Scratch (numpy)](06-neural-network-from-scratch/) | forward pass, backprop derived via the chain rule and verified against numerical gradients, activation functions, vanishing gradients, initialization |
-| 07 | Neural Network in PyTorch | autograd vs. your scratch backprop, `nn.Module`, optimizers |
+| 07 | [Neural Network in PyTorch](07-neural-network-pytorch/) | autograd proven identical to your scratch backprop, computation graphs, SGD/momentum/RMSprop/Adam derived, mini-batching, dropout & weight decay, a leakage-free training pipeline |
 | 08 | CNN Image Classifier | convolution math, kernels, stride/padding, pooling |
 | 09 | RNN/LSTM Sequence Modeling | recurrence, vanishing/exploding gradients, LSTM gates |
 | 10 | Transformer from Scratch | scaled dot-product attention derived, positional encoding, mini-GPT |

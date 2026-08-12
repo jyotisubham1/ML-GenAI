@@ -72,9 +72,15 @@ build ahead. Answer questions about the current project freely.
   proof, vanishing gradients measured across 12 layers, and initialization tested at two
   depths. Reports honestly that logistic regression beats the network on digits.
 
-**Phase 1 (classical ML) is complete; Phase 2 has begun.** Next is **07 — Neural
-Network in PyTorch**: autograd checked against the scratch backprop, `nn.Module`,
-optimizers.
+- **07 — Neural Networks in PyTorch** — done. Autograd proven identical to project
+  06's hand-derived backprop (6.9e-17), computation graphs with a hand-checked
+  derivative, optimizer comparison on a stretched quadratic and a real network,
+  mini-batch vs full-batch, a regularization *strength* sweep (over-regularization
+  drops accuracy to chance), and a validation-selected pipeline that finally beats
+  logistic regression on the same split.
+
+**Phase 1 complete; Phase 2 underway.** Next is **08 — CNN Image Classifier**:
+convolution math, kernels, stride/padding, pooling, weight sharing.
 
 ### README style (set at 03, extended at 04 — apply to ALL projects)
 
