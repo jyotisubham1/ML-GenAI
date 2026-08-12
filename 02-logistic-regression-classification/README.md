@@ -21,7 +21,80 @@ something you can read anywhere; here you'll watch an MSE-trained model sit comp
 frozen for 300 iterations while an otherwise identical model converges, and you'll have
 derived beforehand exactly why it happens.
 
-## 2. The core idea
+## 2. What is logistic regression, why do we need it, and where is it used?
+
+### What it is
+
+Despite the name, **logistic regression is a classifier** — it predicts a *category*,
+not a number. (The name is historical and genuinely confusing; blame the 19th century.)
+
+It answers questions with two possible answers: is this email spam? will this customer
+cancel? is this tumour malignant? And critically, it doesn't just answer yes or no —
+**it returns a probability**:
+
+```
+  P(malignant)
+    1.0 |                            ______________
+        |                       .·´
+        |                    ·´                     <- the S-curve (sigmoid)
+    0.5 |- - - - - - - - - ·  - - - - - - - - - -
+        |               ·´
+        |          _·´
+    0.0 |_________´
+        +--------------------------------------> tumour size
+                          ^
+                    decision boundary
+                  (where P = 0.5 exactly)
+```
+
+Compare that to project 01's straight line, which shot off to $+\infty$ and $-\infty$.
+This curve **flattens** at 0 and 1, because a probability cannot leave that range.
+
+### Why we need it — what's wrong with just using linear regression?
+
+You could try to predict "0 for benign, 1 for malignant" with project 01's model. It
+fails in three ways, each fixed by a specific piece of §4:
+
+1. **The output escapes the valid range.** A straight line happily predicts $-4.7$ or
+   $12.3$. There's no meaning to "this tumour is −4.7 malignant". → fixed by the
+   **sigmoid** (§4.1).
+2. **The loss punishes the wrong thing.** Squared error treats a probability like a
+   measurement — being 95% confident and wrong costs barely more than being 55%
+   confident and wrong. But a confident wrong medical prediction is *far* worse. →
+   fixed by **cross-entropy** (§4.2).
+3. **It actually breaks during training.** This one's the real surprise: pairing
+   squared error with a sigmoid makes the gradient vanish exactly when the model is
+   most wrong, so it stops learning entirely. → derived in §4.4, and **watched
+   happening** in Part 3.
+
+Point 3 is why this project exists as more than "add a squashing function". You'll see
+a model sit frozen for 300 iterations.
+
+### Where it's actually used
+
+Logistic regression is probably **the most widely deployed classifier in the world** —
+not because it's the most accurate, but because it's fast, interpretable, and gives
+calibrated probabilities:
+
+- **Medical diagnosis and risk scoring** — a doctor needs "72% risk", not "malignant".
+  A probability supports a decision; a label pre-empts it.
+- **Credit scoring and loan default** — regulators in most countries require lenders to
+  explain decisions. A logistic model's coefficients *are* the explanation.
+- **Spam filtering and content moderation** — cheap enough to run on every message.
+- **Advertising click-through prediction** — at web scale, billions of predictions a
+  day; the speed matters more than the last 1% of accuracy.
+- **Epidemiology** — "does smoking raise lung-cancer risk, controlling for age?" The
+  log-odds formulation (§4.1) gives *odds ratios*, the standard currency of medical
+  research.
+- **As the last layer of a neural network.** Every classification network in projects
+  06–10 ends in a sigmoid or its multi-class cousin, softmax, trained with
+  cross-entropy. **You are building the output layer of a deep network right now.**
+
+**When *not* to use it:** when the boundary between classes genuinely isn't a straight
+line and no feature engineering makes it one — Part 1's plot shows the boundary is
+always straight. Projects 04 and 06 handle curved boundaries.
+
+## 3. The core idea
 
 Linear regression outputs an unbounded number. That's wrong for "is this tumor
 malignant?", where the answer is 0 or 1 and anything in between should mean a
@@ -29,22 +102,39 @@ malignant?", where the answer is 0 or 1 and anything in between should mean a
 
 1. **The output range is wrong.** $Xw + b$ happily returns $-4.7$ or $12.3$. There is
    no sensible reading of "this tumor is −4.7 malignant." We need to squash the number
-   into $(0, 1)$. → §3.1
+   into $(0, 1)$. → §4.1
 2. **The scoring is wrong.** Squared error treats a probability estimate like a
    measurement, penalizing symmetrically and gently. But being *confidently wrong*
    about a probability is a far worse failure than hedging, and we want a loss that
-   says so. → §3.2
+   says so. → §4.2
 
 Fix (1) and you get the sigmoid. Fix (2) and you get cross-entropy. Fix both and the
 gradient turns out to be almost exactly project 01's.
 
-## 3. The math
+## 4. The math
 
-### 3.1 The sigmoid, and where it comes from
+### 4.1 The sigmoid, and where it comes from
 
 The model computes the same linear score as before, then squashes it:
 
 $$z = Xw + b \qquad\qquad \hat{y} = \sigma(z) = \frac{1}{1 + e^{-z}}$$
+
+> **Reading it aloud:** *"z equals X w plus b. y-hat equals sigma of z, which equals one
+> over one plus e to the minus z."*
+>
+> | Symbol | Say it | What it means here |
+> |---|---|---|
+> | $z$ | "z" | The **linear score** — exactly project 01's output, before squashing. Also called the *logit*. It can be any real number. |
+> | $\sigma$ | "sigma" (Greek *s*) | The **sigmoid** function — the S-shaped squasher. ⚠️ Confusingly, $\sigma$ also means standard deviation elsewhere (project 03). Context tells you which; here it's always the function. |
+> | $\sigma(z)$ | "sigma of z" | Sigmoid **applied to** $z$ — feed in a real number, get out a probability. |
+> | $e$ | "e" | **Euler's number**, ≈ 2.71828. The natural base for exponentials and logarithms, which is why it appears wherever calculus meets probability. |
+> | $e^{-z}$ | "e to the minus z" | $e$ raised to the power $-z$. Large positive $z$ → this is tiny → $\hat{y} \approx 1$. Large negative $z$ → this is huge → $\hat{y} \approx 0$. |
+> | $\hat{y}$ | "y hat" | Now a **probability** between 0 and 1, not a raw quantity. Same hat convention as project 01: "estimated by the model". |
+> | $(0,1)$ | "the open interval 0 to 1" | Every value **strictly between** 0 and 1 — round brackets mean the endpoints themselves are excluded. The sigmoid never *exactly* reaches 0 or 1. |
+>
+> **Where it comes from:** the sigmoid looks arbitrary but is **derived**, in the next
+> few lines, as the inverse of the log-odds. We don't pick an S-curve because it looks
+> nice; we assume log-odds are linear and the sigmoid is forced on us.
 
 This function maps any real number into $(0,1)$: as $z \to +\infty$, $e^{-z} \to 0$ and
 $\sigma \to 1$; as $z \to -\infty$, $e^{-z} \to \infty$ and $\sigma \to 0$; at $z = 0$
@@ -73,7 +163,7 @@ The probability surface curves smoothly from 0 to 1, but the boundary through it
 perfectly straight — and that's a consequence of the log-odds being linear, not an
 approximation.
 
-### 3.2 Cross-entropy, derived from maximum likelihood
+### 4.2 Cross-entropy, derived from maximum likelihood
 
 We need a loss for probability estimates. Rather than inventing one, ask a precise
 question: **which weights make the data we actually observed most probable?**
@@ -104,6 +194,25 @@ average over $n$ to keep the scale independent of dataset size:
 
 $$\boxed{\ J(w,b) = -\frac{1}{n}\sum_{i=1}^{n}\Big[y_i\log\hat{y}_i + (1-y_i)\log(1-\hat{y}_i)\Big]\ }$$
 
+> **Reading it aloud:** *"J equals minus one over n, times the sum over i, of: y-i times
+> log y-hat-i, plus one minus y-i, times log of one minus y-hat-i."*
+>
+> | Symbol | Say it | What it means here |
+> |---|---|---|
+> | $\prod$ | "product over" | Greek capital **pi** — like $\sum$ but **multiply** instead of add. Used above for the likelihood, because independent probabilities multiply. |
+> | $\log$ | "log" | The **natural** logarithm (base $e$). Turns products into sums, which is why taking it rescues us from multiplying thousands of tiny numbers. |
+> | $y_i \in \{0,1\}$ | "y-i in the set zero-one" | $\in$ means **"is a member of"**; braces list a set. So: each label is either 0 or 1, nothing between. |
+> | $y_i \log\hat{y}_i$ | — | Active **only when $y_i = 1$** (otherwise it's $0 \times \text{something} = 0$). This term scores the positive examples. |
+> | $(1-y_i)\log(1-\hat{y}_i)$ | — | Active **only when $y_i = 0$**. The two terms are an if/else written as arithmetic — a common trick when you need a formula rather than a branch. |
+> | $P(y_i \mid x_i)$ | "P of y-i **given** x-i" | The vertical bar means **"given"** / "conditional on". The probability of this label, assuming this input. |
+> | $L$ | "L" | The **likelihood** — how probable your observed data is under the current weights. Not the same as $J$: we *maximize* $L$ and *minimize* $J = -\frac{1}{n}\log L$. |
+> | leading $-$ | "minus" | $\hat{y}$ is below 1, so $\log\hat{y}$ is **negative**. The minus makes $J$ positive, so "smaller is better" as usual. |
+>
+> **Where it comes from:** fully **derived**, in the lines just above — from nothing but
+> "assume each label is a coin flip, and find the weights making the observed data most
+> probable". This is *maximum likelihood estimation*, and it's the standard machinery
+> for inventing a loss function rather than guessing one.
+
 That is **binary cross-entropy**, and notice we didn't choose it — it fell out of
 "assume Bernoulli labels and maximize likelihood." Project 01's MSE has the same
 pedigree: it's the maximum-likelihood loss when you assume *Gaussian* noise. Picking a
@@ -114,7 +223,7 @@ is $-\log\hat{y}$. Predict 0.9 and pay $0.105$. Predict 0.1 and pay $2.303$. Pre
 0.001 and pay $6.908$. As $\hat{y} \to 0$ the penalty goes to **infinity**. Squared
 error, by contrast, can never charge more than 1.
 
-### 3.3 The gradient — and a cancellation that matters
+### 4.3 The gradient — and a cancellation that matters
 
 Now differentiate. Two facts first:
 
@@ -141,7 +250,7 @@ $$\boxed{\ \frac{\partial J}{\partial z} = \frac{1}{n}(\hat{y} - y)\ }$$
 
 **The $\hat{y}(1-\hat{y})$ term vanished completely.** Cross-entropy's derivative
 produced exactly the reciprocals needed to cancel the sigmoid's derivative. That
-cancellation is the entire reason this pairing is used — and §3.4 shows what happens
+cancellation is the entire reason this pairing is used — and §4.4 shows what happens
 when you break it.
 
 Stacked across features:
@@ -155,7 +264,7 @@ function, different loss, *same shape of gradient*. That's because both are
 **generalized linear models**, and "gradient = error × input" is the general pattern
 for that whole family. You'll meet it again in backpropagation.
 
-### 3.4 Why MSE fails — the prediction Part 3 tests
+### 4.4 Why MSE fails — the prediction Part 3 tests
 
 Suppose we ignore all of the above and just use squared error on the sigmoid's output,
 $J = \frac{1}{n}\sum(\hat{y}-y)^2$. Now the chain rule gives:
@@ -179,7 +288,7 @@ central obstacle in deep learning (projects 06 and 09). The prediction to test: 
 both models from a confidently-wrong position and the MSE model should be unable to
 escape.* Part 3 runs exactly that experiment.
 
-## 4. From formula to code
+## 5. From formula to code
 
 Open [`logistic_regression.py`](logistic_regression.py). The `LogisticRegressionGD`
 docstring numbers each formula, and the matching line in `fit()` carries the number.
@@ -192,7 +301,7 @@ docstring numbers each formula, and the matching line in `fit()` carries the num
 | (4) | $\partial J/\partial z = \hat{y} - y$ | `dz = y_hat - y` |
 | (5) | $\partial J/\partial w = \frac{1}{n}X^T(\hat{y}-y)$ | `dw = (1 / n_samples) * (X.T @ dz)` |
 | (6) | $w := w - \alpha\,\partial J/\partial w$ | `self.weights -= self.learning_rate * dw` |
-| §3.4 | MSE's extra $\hat{y}(1-\hat{y})$ | `dz = error * y_hat * (1 - y_hat)` |
+| §4.4 | MSE's extra $\hat{y}(1-\hat{y})$ | `dz = error * y_hat * (1 - y_hat)` |
 
 Two implementation details that exist for numerical reasons, not mathematical ones:
 
@@ -209,7 +318,7 @@ confidence matters. `predict` thresholds it at 0.5 to give a hard label. **That
 threshold is a choice, not a property of the model** — exercise 2, and the main subject
 of project 03.
 
-## 5. The data
+## 6. The data
 
 Three scenarios, each isolating one idea:
 
@@ -228,7 +337,7 @@ Three scenarios, each isolating one idea:
    it would hide the effect. The bad init puts both models deep in saturation, which is
    where the two losses part company.
 
-## 6. Results — what each plot is telling you
+## 7. Results — what each plot is telling you
 
 ### Part 1 — the boundary is a straight line
 
@@ -240,7 +349,7 @@ Test accuracy: 0.983
 ```
 
 The black line is where the model puts $p = 0.5$. It is *exactly* straight — that's
-§3.1's claim made visible. The underlying probability surface is a smooth S-shaped
+§4.1's claim made visible. The underlying probability surface is a smooth S-shaped
 ramp from 0 to 1, yet the set of points where it crosses 0.5 is perfectly flat, because
 that set is the solution of the linear equation $z = 0$.
 
@@ -295,7 +404,7 @@ flat** — not slow, not noisy: visually indistinguishable from horizontal acros
 iterations. The MSE model has not learned anything at all.
 
 Nothing differs between these two runs except the loss function. Same initialization,
-same learning rate, same data, same update rule. And §3.4 predicted this before the
+same learning rate, same data, same update rule. And §4.4 predicted this before the
 code ran: starting deep in saturation, MSE's gradient carries a $\hat{y}(1-\hat{y})$
 factor of roughly $0.001$, so every update is a thousandth of the size it needs to be.
 The model is confidently wrong and structurally unable to notice.
@@ -303,7 +412,7 @@ The model is confidently wrong and structurally unable to notice.
 This is what "the wrong loss function" actually looks like — not slightly worse
 accuracy, but a model that cannot train.
 
-## 7. Run it
+## 8. Run it
 
 ```bash
 cd 02-logistic-regression-classification
@@ -317,7 +426,7 @@ Expect ~98% on Part 1's blobs, mid-to-high 90s for both methods in Part 2, and i
 Part 3 a cross-entropy loss falling from ~24 to ~0.04 while MSE stays pinned near
 0.987. Writes three plots to `outputs/`.
 
-## 8. Exercises
+## 9. Exercises
 
 1. **Find the tipping point.** Part 3's bad init is $w = [-8, -8]$, $b = -2$. Try
    milder ones — $[-2,-2]$, then $[-4,-4]$. At what magnitude does MSE stop being stuck
@@ -339,12 +448,12 @@ Part 3 a cross-entropy loss falling from ~24 to ~0.04 while MSE stays pinned nea
    line can separate overlapping classes — this is what project 01's "irreducible
    error" looks like for classification.
 5. **Verify the cancellation numerically.** Pick a single training point, compute
-   $\partial J/\partial z$ by hand from §3.3, then compare against a numerical
+   $\partial J/\partial z$ by hand from §4.3, then compare against a numerical
    derivative: $\big(J(z + 10^{-6}) - J(z - 10^{-6})\big) / (2 \times 10^{-6})$. They
    should agree to ~6 decimals. This is **gradient checking**, and it's the standard
    way to catch a bad derivation before it silently trains a broken model.
 
-## 9. What's next
+## 10. What's next
 
 Both projects so far have reported accuracy, MSE and R² almost in passing — and Part 2
 above quietly showed four metrics disagreeing about the same model without explaining

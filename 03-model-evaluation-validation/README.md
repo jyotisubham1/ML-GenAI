@@ -24,7 +24,70 @@ experiments:
 | 4 | ROC-AUC flatters models on rare-event data | ROC says 0.74, precision-recall says 0.36 |
 | 5 | Leakage manufactures accuracy from nothing | 5000 columns of **pure random noise** → 89% |
 
-## 2. The core idea
+## 2. What is model evaluation, why do we need it, and where does it matter?
+
+### What it is
+
+Model evaluation is **measuring how good a model is — honestly.** Not on the data it
+learned from, and not with a number that flatters it.
+
+That sounds trivial. It is the single most common source of serious, expensive mistakes
+in applied machine learning, and this whole project is five demonstrations of why.
+
+The core difficulty is a small one that compounds:
+
+```
+   your data                 the world
+  ┌──────────┐              ┌──────────────────┐
+  │ 1,000    │   you must   │  every future    │
+  │ examples │ ──────────▶  │  case, forever   │
+  │ you have │  generalize  │  (unseen)        │
+  └──────────┘              └──────────────────┘
+       ▲                              ▲
+   you can measure              you actually care
+   performance here             about performance HERE
+```
+
+You can only measure on the left. You only care about the right. **Every technique in
+this project is a way of using the left to make an honest guess about the right.**
+
+### Why we need it — three failures you cannot see without it
+
+1. **A model can memorize instead of learning.** Ask any flexible model to fit 1,000
+   examples and it can simply store them, scoring 100% on data it has seen and failing
+   on anything new. Measuring on training data doesn't just overstate quality — it
+   actively rewards the worst models.
+2. **The headline number can be measuring the wrong thing.** In Part 1, a cancer
+   detector that finds **1 tumour out of 42** reports 96.6% accuracy and 100%
+   precision. Both numbers are correct. Both are useless. You need to know which metric
+   answers your actual question.
+3. **The measurement itself is noisy.** In Part 2, the same model on the same data
+   scores anywhere from 93.9% to 100% depending purely on which rows landed in the test
+   set. Report the lucky one and you've misled everyone, without lying.
+
+And underneath all three: **you cannot improve what you cannot measure.** Part 3's
+bias-variance decomposition splits your error into causes with *different fixes* — one
+says "get a bigger model", the other says "get more data". Guessing wrong wastes months.
+
+### Where it actually matters
+
+- **Anywhere the classes are imbalanced** — fraud, disease, defects, churn. The rarer
+  and more important the event, the more accuracy lies to you.
+- **Medical and safety-critical models** — a false negative and a false positive have
+  wildly different costs, so a single accuracy number is never the right summary.
+- **Any published or audited result** — "we achieve 97%" means nothing without knowing
+  how it was measured. Part 5 shows an 89% result produced from **pure random noise**
+  by a mistake anyone could make.
+- **Model selection, everywhere** — choosing between two models, or tuning any
+  hyperparameter, is *entirely* an evaluation problem. Every later project in this
+  curriculum leans on cross-validation from here on.
+- **Kaggle and benchmark leaderboards** — the gap between leaderboard score and real
+  performance is almost always a leakage story like Part 5's.
+
+**This is the project that makes the other projects trustworthy.** Nothing here builds a
+new model; everything here tells you whether to believe one.
+
+## 3. The core idea
 
 When you report "my model is 96% accurate", you are making a claim about **data the
 model has never seen** — future patients, tomorrow's transactions. But you only have
@@ -45,9 +108,9 @@ by splitting it into three pieces that come from three different causes.
 
 ---
 
-## 3. The math
+## 4. The math
 
-### 3.1 Everything starts with four numbers
+### 4.1 Everything starts with four numbers
 
 Take a binary classifier. For each example there are exactly four possible outcomes:
 the truth is positive or negative, and you predicted positive or negative. Count how
@@ -68,6 +131,25 @@ $$
 \qquad
 \text{recall} = \frac{TP}{TP + FN}
 $$
+
+> **Reading them aloud:** *"Accuracy equals TP plus TN, over TP plus TN plus FP plus FN.
+> Precision equals TP over TP plus FP. Recall equals TP over TP plus FN."*
+>
+> | Symbol | Say it | What it means here |
+> |---|---|---|
+> | $TP$ | "true positive" | Predicted positive, **and it was**. A catch. |
+> | $TN$ | "true negative" | Predicted negative, **and it was**. Correctly ignored. |
+> | $FP$ | "false positive" | Predicted positive, **but it wasn't**. A false alarm. Also called a *Type I error*. |
+> | $FN$ | "false negative" | Predicted negative, **but it was positive**. A miss. Also called a *Type II error* — and usually the one that hurts. |
+> | the fraction bar | "over" | Division. In every metric here the numerator is "cases I got right of some kind" and the denominator is "the total I'm measuring against". |
+>
+> **Memory aid:** the first letter says whether the model was **right** (T) or **wrong**
+> (F); the second says what the model **predicted** (P or N). So a "false negative" is
+> a *wrong* prediction of *negative* — the model said no, the truth was yes.
+>
+> **Where they come from:** these are **definitions**, not derivations — but the
+> *choice* of denominator is the entire content. Change what you divide by and you've
+> changed the question you're asking, as the worked example below makes painfully clear.
 
 Read the denominators, not the numerators — that's where the meaning is:
 
@@ -98,7 +180,7 @@ $$
 and precision both look superb; recall is the one telling the truth. This is not a
 contrived example — it is what logistic regression does by default on 3% prevalence data.
 
-### 3.2 F1: why the *harmonic* mean
+### 4.2 F1: why the *harmonic* mean
 
 Precision and recall trade off, so people combine them into one number. But why this
 strange-looking formula?
@@ -120,7 +202,7 @@ verdict on a cancer detector that misses 41 of 42 cases. The harmonic mean is al
 dominated by the **smaller** of its inputs, so you cannot buy a good score by maxing
 out one metric and sacrificing the other.
 
-### 3.3 The threshold is not part of the model
+### 4.3 The threshold is not part of the model
 
 This trips up nearly everyone. Logistic regression outputs a *probability* $\hat{p}$.
 Turning that into a yes/no answer needs a cutoff:
@@ -132,7 +214,7 @@ plus many thresholds gives you many different classifiers, with wildly different
 precision/recall. Choosing $t$ is a decision about *consequences* — how bad is a miss
 versus a false alarm? — and no amount of training data can answer it for you.
 
-### 3.4 Why one split isn't enough — and what k-fold does about it
+### 4.4 Why one split isn't enough — and what k-fold does about it
 
 Hold out 20% as a test set and you get an estimate of test accuracy. But *which* 20%
 you happened to hold out is random, so your estimate is a random variable with its own
@@ -165,7 +247,7 @@ $$\text{CV score} = \frac{1}{k}\sum_{i=1}^{k} \text{score}(\text{fold}_i)$$
 Averaging $k$ estimates shrinks the noise — Part 2 measures a **3.7× reduction** in
 standard deviation. The cost is that you train $k$ models instead of one.
 
-### 3.5 The bias-variance decomposition, derived
+### 4.5 The bias-variance decomposition, derived
 
 This is the most important piece of theory in classical ML, and it's worth doing the
 algebra once rather than memorizing the conclusion.
@@ -215,6 +297,26 @@ $$
 + \underbrace{\sigma^2}_{\text{noise}}\ }
 $$
 
+> **Reading it aloud:** *"The expected squared difference between y and f-hat-D of x
+> equals: f of x minus f-bar of x, squared; plus the expectation over D of f-hat-D of x
+> minus f-bar of x, squared; plus sigma squared."*
+>
+> | Symbol | Say it | What it means here |
+> |---|---|---|
+> | $\mathbb{E}[\cdot]$ | "expectation of" / "expected value of" | The **average over all possible outcomes**, weighted by probability. Read $\mathbb{E}[X]$ as "if I repeated this experiment forever, what would $X$ average out to?" |
+> | $\mathbb{E}_D[\cdot]$ | "expectation over D" | Averaging over **all possible training sets** specifically. The subscript names *what* is random. This is the key mental move: imagine re-collecting your data many times. |
+> | $f(x)$ | "f of x" | The **true** underlying function — reality, which you never observe directly. |
+> | $\hat{f}_D$ | "f-hat sub D" | The model **you fit on training set $D$**. Change $D$ and you get a different $\hat{f}$ — that variability is the whole point. |
+> | $\bar{f}(x)$ | "f bar of x" | The **average model** — what you'd get by fitting on every possible training set and averaging the predictions. A **bar** always means "average of". |
+> | $\varepsilon$ | "epsilon" | The **noise** — the random part of $y$ that no model can predict. Greek epsilon conventionally denotes a small error term. |
+> | $\sigma^2$ | "sigma squared" | The **variance of that noise**: how big it is on average. Here $\sigma$ is a standard deviation (unlike project 02's sigmoid $\sigma$ — same letter, different job). |
+> | $\underbrace{\ }_{\text{label}}$ | — | Just a brace labelling which piece is which. Not an operation. |
+>
+> **Where it comes from:** **fully derived**, in the two steps immediately above, from
+> nothing but expanding a square and using $\mathbb{E}[\varepsilon] = 0$. It is an
+> *identity* — always exactly true, for every model and dataset — which is why Part 3
+> can check it numerically to four decimal places.
+
 **In plain language:**
 
 - **Bias²** — how wrong the *average* model is. High when the model is too rigid to
@@ -234,7 +336,7 @@ minimum of their sum.
 bias², variance and $\sigma^2$ from one set of formulas, computes the actual measured
 error from a completely separate calculation, and confirms they match to within 0.004.
 
-### 3.6 ROC, AUC, and what AUC actually means
+### 4.6 ROC, AUC, and what AUC actually means
 
 Instead of committing to one threshold, sweep *all* of them and plot the result. At
 each threshold compute:
@@ -274,7 +376,7 @@ credits the model for classifiers no threshold can actually produce. Part 4 prin
 
 ---
 
-## 4. From formula to code
+## 5. From formula to code
 
 Open [`model_evaluation.py`](model_evaluation.py). Each function's docstring carries a
 numbered formula, and the numbers match this table.
@@ -301,7 +403,7 @@ sum. **Accepting the top $k$ scores as "positive" *is* the classifier whose thre
 equals the $k$-th score** — so one sort plus one `cumsum` evaluates every threshold at
 once. Same result, no loop.
 
-## 5. The data
+## 6. The data
 
 Four datasets, each chosen to isolate one idea:
 
@@ -320,7 +422,7 @@ Four datasets, each chosen to isolate one idea:
    is nothing to learn, by construction. That's the point: any accuracy above 50% is
    measurably a bug in the *procedure*.
 
-## 6. Results — what each plot is telling you
+## 7. Results — what each plot is telling you
 
 Run the code (section 7) and you'll regenerate all of these.
 
@@ -399,7 +501,7 @@ into the feature set, so the "held-out" folds were never held out. This is the s
 most common serious bug in applied ML, and it does not announce itself — it looks like
 a great result.
 
-## 7. Run it
+## 8. Run it
 
 ```bash
 cd 03-model-evaluation-validation
@@ -414,7 +516,7 @@ catch 1 of 42 positives at the default threshold; Part 2's single-split spread o
 percentage points; Part 3's predicted-vs-measured columns to agree to ~0.004; Part 4's
 scratch metrics to match sklearn exactly; Part 5 to report ~89% on pure noise.
 
-## 8. Exercises
+## 9. Exercises
 
 1. **Make accuracy look even better.** In `make_imbalanced`, change `weights` to
    `[0.99, 0.01]`. The do-nothing baseline's accuracy rises toward 99%. At what
@@ -444,7 +546,7 @@ scratch metrics to match sklearn exactly; Part 5 to report ~89% on pure noise.
    class proportions. On the 3%-prevalence data, remove it and re-run Part 2. Some
    folds will contain very few positives — watch recall become erratic across folds.
 
-## 9. What's next
+## 10. What's next
 
 Everything so far has been a straight line: linear regression fits a line, logistic
 regression fits a linear boundary. Project 04 moves to models that carve up feature

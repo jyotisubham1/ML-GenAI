@@ -57,17 +57,44 @@ build ahead. Answer questions about the current project freely.
   decomposition derived *and* verified numerically, ROC-AUC vs. average precision
   with a Monte-Carlo proof of the ranking interpretation, and a leakage demo hitting
   89% on pure noise.
-- **04 — Trees & Ensembles** — next. entropy/information gain, decision trees, random
-  forest, gradient boosting.
+- **04 — Trees & Ensembles** — done. Scratch tree on entropy/information gain, depth
+  overfitting sweep, an out-of-sample test of the bagging variance formula, random
+  forests measured to raise bias while cutting variance (and *losing* to plain bagging
+  on this data — reported honestly), scratch gradient boosting, and a bias-variance
+  table showing bagging fixes variance while boosting fixes bias.
+- **05 — Clustering & Dimensionality Reduction** — done. Scratch k-means with its
+  monotonic-decrease proof, k-means++ vs. random init over 200 restarts, elbow +
+  silhouette, the two structural failures of k-means, PCA derived via Lagrange
+  multipliers, and PCA beating 500 random projections.
 
-### README style (set at project 03, apply to all future projects)
+**Phase 1 (classical ML) is complete.** Next is **06 — Neural Network from Scratch
+(numpy)**: forward pass, backprop derived via the chain rule.
 
-Project READMEs are written for a beginner: a short "read 1–3 slowly" note at the top,
-every formula stated in words before symbols, **LaTeX math** in `$…$` / `$$…$$` (GitHub
-renders it natively — do not fall back to plain-text formulas), the generated plots
-**embedded inline** with a paragraph explaining what each one shows, and a worked
-numeric example using the script's actual printed output. Projects 01 and 02 were
-retrofitted to this style on 2026-08-12 — all three now match, so follow it from here.
+### README style (set at 03, extended at 04 — apply to ALL projects)
+
+Project READMEs are written for a beginner who has never seen the topic before.
+Required elements, in order:
+
+1. **§1 What you'll build** — with a table of claims and the evidence for each.
+2. **§2 "What is X, why do we need it, where is it used?"** — plain language, BEFORE
+   any mathematics. Must cover: what the thing actually is (concrete, ideally a
+   picture or diagram); what's wrong with the previous project's method that motivates
+   it; and real-world applications, including **when NOT to use it**.
+3. **§3 The core idea** — the intuition that the math will formalize.
+4. **§4 The math** — every formula gets **all three** of:
+   - **"Reading it aloud"** — the equation spoken as an English sentence.
+   - **A symbol table** — every symbol, how it's pronounced, and what it means *here*.
+     Never assume Σ, Π, ∈, E[·], ρ, σ, ∂ or subscript/superscript notation is known.
+   - **"Where it comes from"** — derived, defined, or assumed; and why it has that
+     shape rather than another.
+5. **§ Results** — generated plots **embedded inline**, each with a paragraph on what
+   to look at, plus worked numeric examples using the script's real printed output.
+6. **Exercises** that break things on purpose.
+
+Math is **LaTeX** in `$…$` / `$$…$$` (GitHub renders it natively — never fall back to
+plain-text formula blocks). Prefer more explanation over less: assume the reader is
+smart but has forgotten all notation. Projects 01–03 were retrofitted to this style on
+2026-08-12; keep all projects consistent.
 
 ## Repo
 

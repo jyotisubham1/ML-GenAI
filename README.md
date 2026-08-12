@@ -23,8 +23,7 @@ earlier ones — go in order the first time through.
    else's working code teaches far less than breaking it and figuring out why it broke.
 4. Move to the next project.
 
-Projects are built one at a time, in order, as you work through them — **01 (Linear
-Regression)**, **02 (Logistic Regression)** and **03 (Model Evaluation)** exist so far.
+Projects are built one at a time, in order, as you work through them — **01–05** exist so far, completing **Phase 1 (classical ML)**.
 Say "next" (or ask questions about the current one) when you're ready and the next one
 gets built the same way: README + math + code + data + exercises.
 
@@ -36,8 +35,8 @@ gets built the same way: README + math + code + data + exercises.
 | 01 | [Linear Regression from Scratch](01-linear-regression-from-scratch/) | MSE loss, gradient descent derived by hand, normal equation vs. iterative GD |
 | 02 | [Logistic Regression / Classification](02-logistic-regression-classification/) | sigmoid, cross-entropy, why MSE is wrong for classification, decision boundaries |
 | 03 | [Model Evaluation & Validation](03-model-evaluation-validation/) | train/val/test, k-fold CV, bias-variance derived and verified numerically, confusion matrix, precision/recall/F1/ROC-AUC, data leakage |
-| 04 | Trees & Ensembles | entropy/information gain, decision trees, random forest, gradient boosting |
-| 05 | Clustering & Dimensionality Reduction | k-means objective, PCA via eigen-decomposition |
+| 04 | [Trees & Ensembles](04-trees-and-ensembles/) | entropy/information gain, decision trees from scratch, bagging's variance formula verified, random forests, gradient boosting derived as gradient descent |
+| 05 | [Clustering & Dimensionality Reduction](05-clustering-and-dimensionality-reduction/) | k-means objective and its convergence proof, k-means++, choosing k, PCA derived via Lagrange multipliers and eigen-decomposition |
 
 ### Phase 2 — Deep learning foundations
 | # | Project | Core ideas |
