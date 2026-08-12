@@ -55,6 +55,13 @@ build ahead. Answer questions about the current project freely.
 - **03 — Model Evaluation & Validation** — next. train/val/test, k-fold CV,
   bias-variance, confusion matrix, precision/recall/F1/ROC-AUC.
 
+## Repo
+
+Remote: https://github.com/jyotisubham1/ML-GenAI (branch `main`, GPL-3.0).
+Commit and push each project as it lands, alongside the README/Progress updates above.
+The `.venv` directories are gitignored and must never be committed — they are ~365 MB
+each and contain machine-specific absolute paths.
+
 ## Environment gotchas
 
 - Each project has its own `.venv` (python 3.11) with a `requirements.txt`.
