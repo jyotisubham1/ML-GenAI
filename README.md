@@ -24,9 +24,9 @@ earlier ones — go in order the first time through.
 4. Move to the next project.
 
 Projects are built one at a time, in order, as you work through them — **01 (Linear
-Regression)** and **02 (Logistic Regression)** exist so far. Say "next" (or ask
-questions about the current one) when you're ready and the next one gets built the
-same way: README + math + code + data + exercises.
+Regression)**, **02 (Logistic Regression)** and **03 (Model Evaluation)** exist so far.
+Say "next" (or ask questions about the current one) when you're ready and the next one
+gets built the same way: README + math + code + data + exercises.
 
 ## Roadmap
 
@@ -35,7 +35,7 @@ same way: README + math + code + data + exercises.
 |---|---------|------------|
 | 01 | [Linear Regression from Scratch](01-linear-regression-from-scratch/) | MSE loss, gradient descent derived by hand, normal equation vs. iterative GD |
 | 02 | [Logistic Regression / Classification](02-logistic-regression-classification/) | sigmoid, cross-entropy, why MSE is wrong for classification, decision boundaries |
-| 03 | Model Evaluation & Validation | train/val/test, k-fold CV, bias-variance, confusion matrix, precision/recall/F1/ROC-AUC |
+| 03 | [Model Evaluation & Validation](03-model-evaluation-validation/) | train/val/test, k-fold CV, bias-variance derived and verified numerically, confusion matrix, precision/recall/F1/ROC-AUC, data leakage |
 | 04 | Trees & Ensembles | entropy/information gain, decision trees, random forest, gradient boosting |
 | 05 | Clustering & Dimensionality Reduction | k-means objective, PCA via eigen-decomposition |
 
@@ -63,13 +63,3 @@ same way: README + math + code + data + exercises.
 | # | Project | Core ideas |
 |---|---------|------------|
 | 18 | Capstone RAG Assistant | combine retrieval + agents + evaluation into one end-to-end system |
-
-## A note on the GenAI projects (11+) and API keys
-
-Projects 11+ call an LLM API. They're written against the standard `anthropic` Python
-SDK. **A Claude Code / claude.ai subscription does not by itself give you an API key
-usable from a Python script** — that's a separate product (the
-[Anthropic Console](https://console.anthropic.com), billed separately, possibly
-available through your enterprise org). Each of those projects' READMEs will note:
-- how to get/set `ANTHROPIC_API_KEY`, and
-- a local-model fallback (e.g. Ollama) if you'd rather not use a paid API for practice.

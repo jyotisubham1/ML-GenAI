@@ -52,8 +52,22 @@ build ahead. Answer questions about the current project freely.
 - **02 — Logistic Regression / Classification** — done. Sigmoid derived from the
   log-odds link, BCE derived from maximum likelihood, gradient derived by hand,
   breast-cancer dataset scratch-vs-sklearn, empirical BCE-vs-MSE demo.
-- **03 — Model Evaluation & Validation** — next. train/val/test, k-fold CV,
-  bias-variance, confusion matrix, precision/recall/F1/ROC-AUC.
+- **03 — Model Evaluation & Validation** — done. Metrics from scratch, accuracy
+  paradox on 3%-prevalence data, split variance vs. k-fold, bias-variance
+  decomposition derived *and* verified numerically, ROC-AUC vs. average precision
+  with a Monte-Carlo proof of the ranking interpretation, and a leakage demo hitting
+  89% on pure noise.
+- **04 — Trees & Ensembles** — next. entropy/information gain, decision trees, random
+  forest, gradient boosting.
+
+### README style (set at project 03, apply to all future projects)
+
+Project READMEs are written for a beginner: a short "read 1–3 slowly" note at the top,
+every formula stated in words before symbols, **LaTeX math** in `$…$` / `$$…$$` (GitHub
+renders it natively — do not fall back to plain-text formulas), the generated plots
+**embedded inline** with a paragraph explaining what each one shows, and a worked
+numeric example using the script's actual printed output. Projects 01 and 02 predate
+this and still use plain-text formula blocks; retrofit them if the user asks.
 
 ## Repo
 
