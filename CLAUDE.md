@@ -109,8 +109,18 @@ build ahead. Answer questions about the current project freely.
   tradeoff on worst-case random vectors, and chunking swinging accuracy 0.222 -> 1.000
   with overlap helping at every size.
 
-**Phases 1 and 2 complete; Phase 3 underway.** Next is **13 — RAG from Scratch**, the
-first project that needs GROQ_API_KEY (for generation only; retrieval stays local).
+- **13 — RAG from Scratch** — done. Full pipeline with no framework over a FICTIONAL
+  handbook (so a correct answer proves retrieval, not recall): accuracy 0.250 -> 1.000,
+  retrieval-caps-generation shown exactly (correct 1.000 / wrong 0.000), recall@3 of
+  0.875 producing accuracy of exactly 0.875, top-k sweep, dense/BM25/RRF hybrid.
+  Key finding, against the near-universal advice: the "say I don't know" instruction
+  gave ZERO measurable benefit (1.000 -> 1.000 on both absent-topic and decoy-trap
+  tests) and COST 0.125 accuracy on answerable questions. Also found this model refuses
+  rather than fabricates when given clearly irrelevant context (8 of 8).
+  LLM calls are cached to ./cache (gitignored) so re-runs are free and deterministic.
+
+**Phases 1 and 2 complete; Phase 3 underway.** Next is **14 — RAG with LangChain**,
+rebuilding project 13's identical pipeline so the abstractions can be compared directly.
 
 ### README style (set at 03, extended at 04 — apply to ALL projects)
 

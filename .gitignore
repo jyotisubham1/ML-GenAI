@@ -235,3 +235,7 @@ __marimo__/
 # Downloaded datasets
 08-cnn-image-classifier/data/
 **/MNIST/
+
+# Cached LLM responses (derived, regenerable)
+13-rag-from-scratch/cache/
+**/cache/

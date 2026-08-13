@@ -1,0 +1,6 @@
+openai
+numpy
+matplotlib
+sentence-transformers
+python-dotenv
+certifi
