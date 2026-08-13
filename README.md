@@ -51,7 +51,7 @@ gets built the same way: README + math + code + data + exercises.
 | # | Project | Core ideas |
 |---|---------|------------|
 | 11 | [LLM Fundamentals: Tokenization & Sampling](11-llm-tokenization-sampling/) | BPE trained from scratch, word vs char vs subword, why LLMs miscount letters, temperature/top-k/top-p derived, quality-vs-diversity measured |
-| 12 | Embeddings & Vector Search | cosine similarity derived, brute-force vs. FAISS index |
+| 12 | [Embeddings & Vector Search](12-embeddings-vector-search/) | cosine similarity derived, semantic vs. BM25 keyword search, curse of dimensionality, approximate-index recall/speed tradeoff, chunking |
 | 13 | RAG from Scratch (no framework) | chunking, retrieval, augmentation, generation |
 | 14 | RAG with LangChain | same pipeline via LangChain retrievers/LCEL |
 | 15 | Agents & Tool Use | ReAct pattern, LangChain tool-calling agents, failure modes |

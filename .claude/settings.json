@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(time ./.venv/bin/python embeddings_search.py)",
-      "Bash(./.venv/bin/python embeddings_search.py)"
+      "Bash(./.venv/bin/python embeddings_search.py)",
+      "Bash(git push *)",
+      "Bash(git add *)"
     ]
   }
 }
