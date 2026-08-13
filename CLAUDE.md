@@ -136,6 +136,25 @@ build ahead. Answer questions about the current project freely.
   dominates both — an earlier unfair benchmark had to be fixed. EnsembleRetriever now
   lives in `langchain_classic`, which is itself the churn argument.
 
+### ⏸ Project 15 is PAUSED mid-build (2026-08-13)
+
+`15-agents-langgraph/` exists on disk but is **not committed** — `main` stays green.
+Environment is verified (langgraph 1.2.11, tool calling works with
+`llama-3.3-70b-versatile`). Parts 1–2 run; Part 3 crashes. Two diagnosed issues with
+fixes ready:
+
+1. **Question set too easy** — the RAG baseline scored 0.750 and ReAct scored the
+   same, so the agent showed no advantage. Fix: arithmetic the model cannot do
+   mentally (1800 × 37, 400 × 23) plus questions answerable only via the
+   `employee_directory` tool, which retrieval structurally cannot reach.
+2. **`groq.BadRequestError` / `tool_use_failed`** — the model emitted
+   `calculator("4 * on-call stipend")` and Groq rejects the whole request with HTTP
+   400. Fix: try/except in `agent_node`, feed the error back as an `AIMessage`, count
+   it, and report it in Part 5 as a measured failure mode rather than hiding it.
+
+Remaining: Parts 4–6 (comparison table; tool-selection reliability 8b vs 70b, runaway
+loops, wrong arguments; checkpointing + `interrupt_before`), the README, then 16.
+
 **Phases 1 and 2 complete; Phase 3 underway.** Next is **15 — Agents & Tool Use
 (LangGraph)**: ReAct derived and built from scratch, then LangGraph state/cycles/
 conditional edges/checkpointing, plus agent failure modes. NOTE: the roadmap originally
