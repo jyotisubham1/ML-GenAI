@@ -132,6 +132,30 @@ Commit and push each project as it lands, alongside the README/Progress updates 
 The `.venv` directories are gitignored and must never be committed — they are ~365 MB
 each and contain machine-specific absolute paths.
 
+## LLM access for Phase 3 (projects 11+)
+
+A **Groq** API key lives in `.env` as `GROQ_API_KEY` (gitignored at `.gitignore:151`,
+never committed — verify before touching it). Groq is OpenAI-compatible:
+`https://api.groq.com/openai/v1`, so the `openai` SDK works with `base_url` set.
+
+Verified 2026-08-13: key valid, 15 models, including `llama-3.3-70b-versatile`,
+`llama-3.1-8b-instant`, `openai/gpt-oss-120b`, `whisper-large-v3`.
+
+**Groq has NO embeddings endpoint.** Use `sentence-transformers` locally
+(`all-MiniLM-L6-v2`) for project 12 and the retrieval half of 13/14 — free, offline,
+and better for teaching since the vectors are inspectable.
+
+Which projects actually need the API:
+- **11 (tokenization/sampling): NO.** Sampling operates on the full logit vector, which
+  a hosted API does not expose. Use project 10's mini-GPT and/or a local GPT-2.
+- **12 (embeddings): NO** — local embedding model.
+- **13, 14, 15, 16: YES** — they need real generation.
+- **17 (fine-tuning): mostly local**, since Groq serves models but does not train them.
+
+Every project must degrade gracefully without a key: if `GROQ_API_KEY` is missing, skip
+the generation parts with a clear message rather than crashing, so the repo stays
+runnable for anyone who clones it.
+
 ## Environment gotchas
 
 - Each project has its own `.venv` (python 3.11) with a `requirements.txt`.
