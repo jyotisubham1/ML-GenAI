@@ -41,6 +41,14 @@ build ahead. Answer questions about the current project freely.
 
 1. Update the roadmap table in `README.md` so it links the new project.
 2. Update this file's "Progress" section below.
+3. **Run `python3 _shared/check_readmes.py`** — it verifies roadmap links,
+   image paths, and that no math expression contains a character GitHub's KaTeX
+   cannot render. Two bugs have shipped that were invisible from the terminal and
+   only appeared in GitHub's rendered view: a roadmap row that lost its link when a
+   `str.replace()` silently failed to match, and a `#` inside a math expression.
+   **Escaping `#` as `\#` does NOT work** — GitHub's markdown parser strips the
+   backslash before the math renderer sees it, so avoid `#` and `%` in math entirely
+   and write the words instead.
 3. Write/refresh a memory file (see `.claude` memory for this project) — but treat
    `README.md` and this file as the source of truth for status, since the memory
    directory is keyed by absolute path and is silently orphaned by a rename.

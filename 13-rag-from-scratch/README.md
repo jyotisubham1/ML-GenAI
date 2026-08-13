@@ -148,7 +148,15 @@ $$\text{RRF}(c) = \sum_{r \in \text{retrievers}} \frac{1}{K + \text{rank}_r(c)}$
 
 ### 4.4 Measuring it
 
-$$\text{recall@}k = \frac{\#\{\text{questions whose answer appears in the top-}k \text{ chunks}\}}{\#\text{questions}}$$
+$$\text{recall@}k = \frac{\text{number of questions whose answer appears in the top-}k\text{ chunks}}{\text{total number of questions}}$$
+
+> | Symbol | Say it | What it means here |
+> |---|---|---|
+> | recall@$k$ | "recall at k" | The fraction of questions for which retrieval **put the answer in front of the model at all**. |
+> | $k$ | "k" | How many chunks were retrieved (3 in Part 5). |
+>
+> Note this measures **retrieval alone** — no LLM is involved. That separation is the
+> whole point: it tells you whether a failure happened before or after generation.
 
 > **Why this is the metric that matters:** recall@k is the **hard ceiling** on answer
 > accuracy. If the answer isn't in the retrieved context, the generator can only produce
