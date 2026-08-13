@@ -127,8 +127,20 @@ build ahead. Answer questions about the current project freely.
   rather than fabricates when given clearly irrelevant context (8 of 8).
   LLM calls are cached to ./cache (gitignored) so re-runs are free and deterministic.
 
-**Phases 1 and 2 complete; Phase 3 underway.** Next is **14 — RAG with LangChain**,
-rebuilding project 13's identical pipeline so the abstractions can be compared directly.
+- **14 — RAG with LangChain** — done. Imports project 13's handbook/questions/prompt so
+  only the framework varies. Key findings: the two pipelines DISAGREED (raw 1.000 vs
+  LangChain 0.875) purely from different chunk boundaries — both retrieved the answer,
+  so it was a generation difference, showing recall is necessary but not sufficient.
+  LCEL .batch() gave a measured 2.3x speedup. Dependency cost was much SMALLER than
+  expected (1.6x packages but only 1.08x disk, imports marginally faster) because torch
+  dominates both — an earlier unfair benchmark had to be fixed. EnsembleRetriever now
+  lives in `langchain_classic`, which is itself the churn argument.
+
+**Phases 1 and 2 complete; Phase 3 underway.** Next is **15 — Agents & Tool Use
+(LangGraph)**: ReAct derived and built from scratch, then LangGraph state/cycles/
+conditional edges/checkpointing, plus agent failure modes. NOTE: the roadmap originally
+said "LangChain tool-calling agents"; that is legacy (AgentExecutor -> LangGraph) and
+the roadmap was updated on 2026-08-13.
 
 ### README style (set at 03, extended at 04 — apply to ALL projects)
 

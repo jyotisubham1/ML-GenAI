@@ -23,7 +23,7 @@ earlier ones — go in order the first time through.
    else's working code teaches far less than breaking it and figuring out why it broke.
 4. Move to the next project.
 
-Projects are built one at a time, in order, as you work through them — **01–12** exist so far — **Phases 1 and 2 are complete**, and Phase 3 (GenAI) is underway.
+Projects are built one at a time, in order, as you work through them — **01–14** exist so far — **Phases 1 and 2 are complete**, and Phase 3 (GenAI) is underway.
 Say "next" (or ask questions about the current one) when you're ready and the next one
 gets built the same way: README + math + code + data + exercises.
 
@@ -53,8 +53,8 @@ gets built the same way: README + math + code + data + exercises.
 | 11 | [LLM Fundamentals: Tokenization & Sampling](11-llm-tokenization-sampling/) | BPE trained from scratch, word vs char vs subword, why LLMs miscount letters, temperature/top-k/top-p derived, quality-vs-diversity measured |
 | 12 | [Embeddings & Vector Search](12-embeddings-vector-search/) | cosine similarity derived, semantic vs. BM25 keyword search, curse of dimensionality, approximate-index recall/speed tradeoff, chunking |
 | 13 | [RAG from Scratch (no framework)](13-rag-from-scratch/) | chunking, retrieval, augmentation, generation; retrieval caps generation, top-k tradeoff, hybrid RRF, and the "say I don't know" instruction measured rather than assumed |
-| 14 | RAG with LangChain | same pipeline via LangChain retrievers/LCEL |
-| 15 | Agents & Tool Use | ReAct pattern, LangChain tool-calling agents, failure modes |
+| 14 | [RAG with LangChain](14-rag-langchain/) | the same pipeline via LCEL, verified against project 13's raw version; batching/streaming, swappable retrievers, and the framework's cost measured |
+| 15 | Agents & Tool Use (LangGraph) | ReAct derived and built from scratch, then LangGraph: state, cycles, conditional edges, checkpointing, human-in-the-loop, and agent failure modes measured |
 | 16 | GenAI Evaluation & Metrics | precision@k/recall@k/MRR/NDCG, RAGAS-style faithfulness, LLM-as-judge |
 | 17 | Fine-tuning & PEFT | LoRA math (low-rank weight updates), when to fine-tune vs. prompt |
 

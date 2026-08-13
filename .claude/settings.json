@@ -8,7 +8,10 @@
       "Bash(time ./.venv/bin/python rag_from_scratch.py)",
       "Bash(./.venv/bin/python rag_from_scratch.py)",
       "Bash(echo \"exit $?\")",
-      "Bash(sed -n '/This is where the measured/,/does not know/p' /private/tmp/claude-501/-Users-jyotisubham-Documents-Practice-ML-GenAI/edc7c258-c971-4ff4-b109-011be415d0bf/scratchpad/p13.txt)"
+      "Bash(sed -n '/This is where the measured/,/does not know/p' /private/tmp/claude-501/-Users-jyotisubham-Documents-Practice-ML-GenAI/edc7c258-c971-4ff4-b109-011be415d0bf/scratchpad/p13.txt)",
+      "Bash(time ./.venv/bin/python rag_langchain.py)",
+      "Bash(./.venv/bin/python rag_langchain.py)",
+      "Bash(sed -n '/The question they disagree/,/PART 3/p' /private/tmp/claude-501/-Users-jyotisubham-Documents-Practice-ML-GenAI/edc7c258-c971-4ff4-b109-011be415d0bf/scratchpad/p14.txt)"
     ]
   }
 }
