@@ -23,7 +23,7 @@ earlier ones — go in order the first time through.
    else's working code teaches far less than breaking it and figuring out why it broke.
 4. Move to the next project.
 
-Projects are built one at a time, in order, as you work through them — **01–07** exist so far — **Phase 1 (classical ML)** is complete and Phase 2 is underway.
+Projects are built one at a time, in order, as you work through them — **01–10** exist so far — **Phases 1 and 2 (classical ML, deep learning) are complete**.
 Say "next" (or ask questions about the current one) when you're ready and the next one
 gets built the same way: README + math + code + data + exercises.
 
@@ -43,9 +43,9 @@ gets built the same way: README + math + code + data + exercises.
 |---|---------|------------|
 | 06 | [Neural Network from Scratch (numpy)](06-neural-network-from-scratch/) | forward pass, backprop derived via the chain rule and verified against numerical gradients, activation functions, vanishing gradients, initialization |
 | 07 | [Neural Network in PyTorch](07-neural-network-pytorch/) | autograd proven identical to your scratch backprop, computation graphs, SGD/momentum/RMSprop/Adam derived, mini-batching, dropout & weight decay, a leakage-free training pipeline |
-| 08 | CNN Image Classifier | convolution math, kernels, stride/padding, pooling |
-| 09 | RNN/LSTM Sequence Modeling | recurrence, vanishing/exploding gradients, LSTM gates |
-| 10 | Transformer from Scratch | scaled dot-product attention derived, positional encoding, mini-GPT |
+| 08 | [CNN Image Classifier](08-cnn-image-classifier/) | convolution from scratch, stride/padding/pooling, weight sharing, translation robustness measured, learned kernels vs. Sobel |
+| 09 | [RNN/LSTM Sequence Modeling](09-rnn-lstm-sequences/) | recurrence from scratch, BPTT, vanishing/exploding gradients measured per timestep, LSTM gates, gradient clipping, char-level LM |
+| 10 | [Transformer from Scratch](10-transformer-from-scratch/) | scaled dot-product attention derived and verified, why sqrt(d_k), permutation equivariance, positional encoding, causal masking, mini-GPT |
 
 ### Phase 3 — Generative AI / LLMs / RAG
 | # | Project | Core ideas |

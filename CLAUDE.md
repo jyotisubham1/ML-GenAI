@@ -79,8 +79,25 @@ build ahead. Answer questions about the current project freely.
   drops accuracy to chance), and a validation-selected pipeline that finally beats
   logistic regression on the same split.
 
-**Phase 1 complete; Phase 2 underway.** Next is **08 — CNN Image Classifier**:
-convolution math, kernels, stride/padding, pooling, weight sharing.
+- **08 — CNN Image Classifier** — done. Convolution from scratch vs F.conv2d, where a
+  CNN's parameters really sit (the FC head holds 95%), translation robustness measured
+  across three models, MNIST accuracy, data efficiency over 3 seeds, learned kernels
+  matched against Sobel. Key finding: global average pooling is far MORE shift-robust
+  (0.615 vs 0.112 at 4px) while being less accurate on centred data.
+- **09 — RNN/LSTM Sequence Modeling** — done. RNN cell from scratch, gradient flow
+  measured per timestep, memory task across four architectures, exploding gradients and
+  clipping, LSTM gates inspected, char-level LM. Key finding: an UNTRAINED LSTM vanishes
+  as badly as an RNN (the forget-gate bias is the actual fix, worth 12 orders of
+  magnitude) — and the default LSTM fails a task the fb=3 version solves perfectly.
+- **10 — Transformer from Scratch** — done. Attention from scratch vs PyTorch, sqrt(d_k)
+  justified by measuring softmax entropy collapse, permutation equivariance proved,
+  positional encoding shown necessary (0.495 vs 0.999), causal masking verified exact,
+  mini-GPT. Payoff: transformer scores 1.000 on project 09's 80-step memory task where
+  every recurrent model was at chance.
+
+**Phases 1 and 2 complete.** Next is **11 — LLM Fundamentals: Tokenization &
+Sampling** (BPE, temperature/top-k/top-p), which begins Phase 3 and switches from
+building models to using pretrained ones.
 
 ### README style (set at 03, extended at 04 — apply to ALL projects)
 

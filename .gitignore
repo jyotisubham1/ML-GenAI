@@ -231,3 +231,7 @@ __marimo__/
 
 # JetBrains
 .idea/
+
+# Downloaded datasets
+08-cnn-image-classifier/data/
+**/MNIST/
