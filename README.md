@@ -23,7 +23,7 @@ earlier ones — go in order the first time through.
    else's working code teaches far less than breaking it and figuring out why it broke.
 4. Move to the next project.
 
-Projects are built one at a time, in order, as you work through them — **01–10** exist so far — **Phases 1 and 2 (classical ML, deep learning) are complete**.
+Projects are built one at a time, in order, as you work through them — **01–12** exist so far — **Phases 1 and 2 are complete**, and Phase 3 (GenAI) is underway.
 Say "next" (or ask questions about the current one) when you're ready and the next one
 gets built the same way: README + math + code + data + exercises.
 
@@ -50,7 +50,7 @@ gets built the same way: README + math + code + data + exercises.
 ### Phase 3 — Generative AI / LLMs / RAG
 | # | Project | Core ideas |
 |---|---------|------------|
-| 11 | LLM Fundamentals: Tokenization & Sampling | BPE tokenization, temperature/top-k/top-p math, prompting |
+| 11 | [LLM Fundamentals: Tokenization & Sampling](11-llm-tokenization-sampling/) | BPE trained from scratch, word vs char vs subword, why LLMs miscount letters, temperature/top-k/top-p derived, quality-vs-diversity measured |
 | 12 | Embeddings & Vector Search | cosine similarity derived, brute-force vs. FAISS index |
 | 13 | RAG from Scratch (no framework) | chunking, retrieval, augmentation, generation |
 | 14 | RAG with LangChain | same pipeline via LangChain retrievers/LCEL |

@@ -95,9 +95,22 @@ build ahead. Answer questions about the current project freely.
   mini-GPT. Payoff: transformer scores 1.000 on project 09's 80-step memory task where
   every recurrent model was at chance.
 
-**Phases 1 and 2 complete.** Next is **11 — LLM Fundamentals: Tokenization &
-Sampling** (BPE, temperature/top-k/top-p), which begins Phase 3 and switches from
-building models to using pretrained ones.
+- **11 — Tokenization & Sampling** — done. BPE trained from scratch (round-trip exact,
+  compression 1.0 -> 6.17 chars/token), word vs char vs subword tradeoff, GPT-2's real
+  tokenizer explaining the strawberry/arithmetic failures, temperature/top-k/top-p from
+  scratch, and a quality-vs-diversity curve measured against a checkable grammar
+  (grammar 1.00 -> 0.09 as T goes 0.3 -> 2.0; top-p recovers 0.796 -> 0.940).
+  Found and fixed a real bug worth keeping: learned position embeddings beyond the
+  trained sequence length produce fluent-then-garbage output.
+- **12 — Embeddings & Vector Search** — done. Cosine derived and shown to matter only on
+  un-normalized vectors (euclidean gets an 8x-repeated document backwards), semantic vs
+  BM25 (MRR 0.917 vs 0.492 on paraphrases, but a 1.000 TIE on exact terms — reported as
+  a tie, not the keyword win I expected), curse of dimensionality, IVF recall/speed
+  tradeoff on worst-case random vectors, and chunking swinging accuracy 0.222 -> 1.000
+  with overlap helping at every size.
+
+**Phases 1 and 2 complete; Phase 3 underway.** Next is **13 — RAG from Scratch**, the
+first project that needs GROQ_API_KEY (for generation only; retrieval stays local).
 
 ### README style (set at 03, extended at 04 — apply to ALL projects)
 
